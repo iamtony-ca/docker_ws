@@ -1,0 +1,48 @@
+# ===================================================================
+# Stage 1: 최종 이미지의 기반이 될 개발용 이미지 생성
+# ===================================================================
+# ROS 2 Jazzy Desktop 버전을 기반으로 시작합니다.
+FROM osrf/ros:jazzy-desktop-full
+
+ARG USERNAME=amr
+ARG USER_UID=1000
+ARG USER_GID=1000
+
+# 1. 시스템 패키지 업데이트, 업그레이드 및 그래픽/필수 패키지 설치
+RUN apt-get update && apt-get upgrade -y && apt-get install -y \
+    sudo \
+    mesa-vulkan-drivers \
+    vulkan-tools \
+    libgl1-mesa-dri \
+    mesa-utils \
+    libxkbcommon-x11-0 \
+    && rm -rf /var/lib/apt/lists/*
+
+# 2. Ubuntu 24.04 기본 사용자(ubuntu, UID/GID 1000) 삭제 (충돌 방지)
+RUN userdel -r ubuntu || true
+
+# 3. 호스트와 동일한 UID/GID 유저 생성 및 sudo NOPASSWD 설정
+# 4. 하드웨어 제어 및 GPU 렌더링 그룹 추가 (render 그룹은 없으면 생성 후 추가)
+RUN groupadd --gid $USER_GID $USERNAME \
+    && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME -s /bin/bash \
+    && echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/$USERNAME \
+    && chmod 0440 /etc/sudoers.d/$USERNAME \
+    && usermod -aG dialout,plugdev,video $USERNAME \
+    && (getent group render || groupadd render) \
+    && usermod -aG render $USERNAME
+
+# 5. (선택) 빌드 로그에서 그래픽 패키지 설치 확인 
+RUN glxinfo | head || true
+RUN vulkaninfo | head || true
+
+# 6. 사용자 전환 및 환경 설정
+USER $USERNAME
+WORKDIR /home/$USERNAME
+
+RUN echo "source /opt/ros/jazzy/setup.bash" >> /home/$USERNAME/.bashrc
+
+RUN echo "check_certificate = off" >> ~/.wgetrc \
+    && echo "insecure" >> ~/.curlrc \
+    && git config --global http.sslVerify false
+
+CMD ["/bin/bash"]
