@@ -15,7 +15,7 @@ docker build \
 
 ```
 
-## run
+## run for gpu
 ```
 xhost +local:docker
 
@@ -57,7 +57,7 @@ docker run -it --rm \
 ```
 
 
-## container 진입 후 cli
+## container 진입 후 cli for gpu
 ```
 sudo apt update && sudo apt upgrade -y
 
@@ -69,6 +69,30 @@ vulkaninfo | head
 gz sim shapes.sdf
 
 ```
+
+## docker run for cpu
+```
+xhost +local:docker
+
+docker run -it --rm \
+  --name jazzy_cpu_test1 \
+  --privileged \
+  --net=host \
+  --ipc=host \
+  --ulimit rtprio=99 \
+  --ulimit memlock=-1 \
+  -e DISPLAY=$DISPLAY \
+  -e XAUTHORITY=/home/$USER/.Xauthority \
+  -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
+  -v $HOME/.Xauthority:/home/tony/.Xauthority:ro \
+  -v /etc/localtime:/etc/localtime:ro \
+  -v /home/$USER/nav_ws:/home/tony/nav_ws \
+  ros2_jazzy_dev_cpu:latest
+
+```
+
+
+
 
 ## exec
 ```
