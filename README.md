@@ -1,7 +1,7 @@
 # docker_ws
 
 ###
-$USERNAME 인 부분은 실제 username 으로 모두 변경해서 해야될수도 있음.
+$USER 인 부분은 실제 username 으로 모두 변경해서 해야될수도 있음.(먼저 해보고 안되면,,)
 
 ## build
 ```
@@ -11,7 +11,7 @@ docker build \
   --build-arg USER_UID=$(id -u) \
   --build-arg USER_GID=$(id -g) \
   --no-cache \
-  -t ros2_jazzy_dev:latest /home/$USERNAME/nav_ws/src/docker_ws/
+  -t ros2_jazzy_dev:latest /home/$USER/nav_ws/src/docker_ws/
 
 ```
 
@@ -29,9 +29,9 @@ docker run -it \
   -e NVIDIA_VISIBLE_DEVICES=all \
   -e NVIDIA_DRIVER_CAPABILITIES=graphics,utility,compute,display \
   -e DISPLAY=$DISPLAY \
-  -e XAUTHORITY=/home/$USERNAME/.Xauthority \
+  -e XAUTHORITY=/home/$USER/.Xauthority \
   -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
-  -v $HOME/.Xauthority:/home/$USERNAME/.Xauthority:ro \
+  -v $HOME/.Xauthority:/home/$USER/.Xauthority:ro \
   -v /etc/localtime:/etc/localtime:ro \
   --name jazzy_gz_sim \
   ros2_jazzy_dev:latest
@@ -47,11 +47,11 @@ docker run -it --rm \
   -e NVIDIA_VISIBLE_DEVICES=all \
   -e NVIDIA_DRIVER_CAPABILITIES=graphics,utility,compute,display \
   -e DISPLAY=$DISPLAY \
-  -e XAUTHORITY=/home/$USERNAME/.Xauthority \
+  -e XAUTHORITY=/home/$USER/.Xauthority \
   -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
-  -v $HOME/.Xauthority:/home/$USERNAME/.Xauthority:ro \
+  -v $HOME/.Xauthority:/home/$USER/.Xauthority:ro \
   -v /etc/localtime:/etc/localtime:ro \
-  -v /home/$USERNAME/nav_ws:/home/$USERNAME/nav_ws \
+  -v /home/$USER/nav_ws:/home/$USER/nav_ws \
   --name jazzy_gz_test1 \
   ros2_jazzy_dev:latest
 ```
@@ -84,9 +84,9 @@ docker run -it --rm \
   -e DISPLAY=$DISPLAY \
   -e XAUTHORITY=/home/$USER/.Xauthority \
   -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
-  -v $HOME/.Xauthority:/home/tony/.Xauthority:ro \
+  -v $HOME/.Xauthority:/home/$USER/.Xauthority:ro \
   -v /etc/localtime:/etc/localtime:ro \
-  -v /home/$USER/nav_ws:/home/tony/nav_ws \
+  -v /home/$USER/nav_ws:/home/$USER/nav_ws \
   ros2_jazzy_dev_cpu:latest
 
 ```
@@ -97,5 +97,5 @@ docker run -it --rm \
 ## exec
 ```
 xhost +local:docker
-docker exec -it -u $USERNAME jazzy_gz_sim /bin/bash
+docker exec -it -u $USER jazzy_gz_sim /bin/bash
 ```
