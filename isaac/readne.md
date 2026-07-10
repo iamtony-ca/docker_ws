@@ -18,8 +18,8 @@ sudo chown -R 1234:1234 ~/docker/isaac-sim-601 ~/.cache/ov/hub
 # 공유 폴더: host(tony)와 container(1234) 양방향 편집 가능하게 ACL
 
 MYUID=$(id -u)   # host user = 1000
-sudo setfacl -R    -m u:$MYUID:rwx -m u🔢rwx -m m:rwx ~/docker/isaac-sim-601/volume
-sudo setfacl -R -d -m u:$MYUID:rwx -m u🔢rwx -m m:rwx ~/docker/isaac-sim-601/volume
+sudo setfacl -R    -m u:$MYUID:rwx -m u:1234:rwx -m m:rwx ~/docker/isaac-sim-601/volume
+sudo setfacl -R -d -m u:$MYUID:rwx -m u:1234:rwx -m m:rwx ~/docker/isaac-sim-601/volume
 
 
 
