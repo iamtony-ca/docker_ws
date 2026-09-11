@@ -36,6 +36,7 @@ docker run --name isaac-sim-601 --entrypoint bash -it --gpus all -e "ACCEPT_EULA
 --privileged \
 --ipc=host \
 -e "PRIVACY_CONSENT=Y" \
+-v /tmp/.X11-unix:/tmp/.X11-unix:rw \
 -v $HOME/.Xauthority:/isaac-sim/.Xauthority \
 -e DISPLAY \
 -v ~/docker/isaac-sim-601/cache/main:/isaac-sim/.cache:rw \
