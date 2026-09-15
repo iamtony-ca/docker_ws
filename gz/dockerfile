@@ -1,0 +1,65 @@
+# ===================================================================
+# ROS 2 Jazzy dev container (osrf/ros:jazzy-desktop-full 기반)
+#   - 호스트 UID/GID와 동일한 유저 생성 -> volume 양방향 편집 시 ACL 불필요
+#   - Ubuntu 24.04 기본 'ubuntu'(1000:1000) 유저 충돌 처리 포함
+# ===================================================================
+FROM osrf/ros:jazzy-desktop-full
+
+ARG DEBIAN_FRONTEND=noninteractive
+ARG USERNAME=tony
+ARG UID=1000
+ARG GID=1000
+
+USER root
+
+# 1) 개발 도구 (colcon/rosdep/vcstool은 ros-base 단계에 이미 포함)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      sudo git vim nano less tree curl gnupg2 lsb-release locales \
+      build-essential cmake gdb clangd \
+      python3-pip python3-argcomplete \
+      ros-jazzy-rmw-cyclonedds-cpp \
+      mesa-utils libxkbcommon-x11-0 \
+ && locale-gen en_US en_US.UTF-8 \
+ && update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 \
+ && rm -rf /var/lib/apt/lists/*
+ENV LANG=en_US.UTF-8
+
+# 2) UID/GID 충돌 정리 후 유저 생성 (핵심)
+#    noble 베이스는 'ubuntu' 유저를 1000:1000으로 미리 갖고 있음
+RUN set -eux; \
+    if getent passwd ${UID} >/dev/null; then \
+        old="$(getent passwd ${UID} | cut -d: -f1)"; \
+        if [ "$old" != "${USERNAME}" ]; then userdel -r "$old" || true; fi; \
+    fi; \
+    if ! getent group ${GID} >/dev/null; then groupadd -g ${GID} ${USERNAME}; fi; \
+    if ! getent passwd ${USERNAME} >/dev/null; then \
+        useradd -m -u ${UID} -g ${GID} -s /bin/bash ${USERNAME}; \
+    fi; \
+    echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${USERNAME}; \
+    chmod 0440 /etc/sudoers.d/${USERNAME}; \
+    usermod -aG dialout,plugdev,video ${USERNAME}; \
+    (getent group render || groupadd render); \
+    usermod -aG render ${USERNAME}
+
+# 3) rosdep 초기화 (베이스에서 이미 init 되어 있으면 무시)
+RUN rosdep init 2>/dev/null || true
+
+USER ${USERNAME}
+WORKDIR /home/${USERNAME}
+
+RUN rosdep update || true
+
+# 4) 셸 환경: ROS 소싱 + volume 아래 워크스페이스 자동 소싱 헬퍼
+RUN echo 'source /opt/ros/jazzy/setup.bash' >> ~/.bashrc \
+ && echo 'source /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash' >> ~/.bashrc \
+ && echo 'export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp' >> ~/.bashrc \
+ && echo 'sws() { source ~/volume/$1/install/setup.bash; }' >> ~/.bashrc
+
+# (환경 특화) 사내망 SSL 우회 — 정말 필요할 때만
+RUN git config --global http.sslVerify false
+
+# 마운트 포인트를 미리 유저 소유로 만들어 둠
+RUN mkdir -p /home/${USERNAME}/volume
+
+ENTRYPOINT ["/ros_entrypoint.sh"]
+CMD ["bash"]
